@@ -22,26 +22,32 @@ services:
       - 2380:80
 
   git-server:
-    image: gogs/gogs:latest
+    image: gitea/gitea:latest
     ports:
       - "9022:22"
       - "9000:3000"
     restart: always
     environment:
-       - RUN_CROND=true
+      - USER_UID=1000
+      - USER_GID=1000
+      - DB_TYPE=mysql
+      - DB_HOST=database:3306
+      - DB_NAME=${DATABASE_NAME}
+      - DB_USER=${DATABASE_USER}
+      - DB_PASSWD=${DATABASE_PASSWORD}
     volumes:
       - ./data/git:/data
 
-  jenkin:
-    image: jenkins
-    build: ./jenkins
-    ports:
-      - "18080:8080"
-      - "50000:50000"
-    user: root
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./jenkins_home:/var/jenkins_home
+  # jenkin:
+  #   image: jenkins
+  #   build: ./jenkins
+  #   ports:
+  #     - "18080:8080"
+  #     - "50000:50000"
+  #   user: root
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - ./jenkins_home:/var/jenkins_home
 
   
 
