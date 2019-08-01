@@ -20,6 +20,8 @@ services:
       - PMA_PORT=3306
     ports:
       - 2380:80
+    depends_on:
+      - database
 
   git-server:
     image: gitea/gitea:latest
@@ -27,6 +29,8 @@ services:
       - "9022:22"
       - "9000:3000"
     restart: always
+    depends_on:
+      - database
     environment:
       - USER_UID=1000
       - USER_GID=1000
@@ -38,16 +42,16 @@ services:
     volumes:
       - ./data/git:/data
 
-  # jenkin:
-  #   image: jenkins
-  #   build: ./jenkins
-  #   ports:
-  #     - "18080:8080"
-  #     - "50000:50000"
-  #   user: root
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - ./jenkins_home:/var/jenkins_home
+  jenkin:
+    image: jenkins
+    build: ./jenkins
+    ports:
+      - "18080:8080"
+      - "50000:50000"
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins_home:/var/jenkins_home
 
   
 
