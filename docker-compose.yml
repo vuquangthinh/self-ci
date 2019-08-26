@@ -24,7 +24,7 @@ services:
       - database
 
   git-server:
-    image: gitea/gitea:latestcat
+    image: gitea/gitea:latest
     ports:
       - "9022:22"
       - "9000:3000"
