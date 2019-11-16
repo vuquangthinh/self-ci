@@ -1,0 +1,75 @@
+version: '3.1'
+
+services:
+  database:
+    image: mariadb
+    environment:
+      - MYSQL_DATABASE=${DATABASE_NAME}
+      - MYSQL_USER=${DATABASE_USER}
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+    volumes:
+      - ./data/db:/var/lib/mysql
+    ports:
+      - 2336:3306
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_HOST=database
+      - PMA_PORT=3306
+    ports:
+      - 2380:80
+    depends_on:
+      - database
+
+  git-server:
+    image: gitea/gitea:latest
+    ports:
+      - "9022:22"
+      - "9000:3000"
+    restart: always
+    depends_on:
+      - database
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - DB_TYPE=mysql
+      - DB_HOST=database:3306
+      - DB_NAME=${DATABASE_NAME}
+      - DB_USER=${DATABASE_USER}
+      - DB_PASSWD=${DATABASE_PASSWORD}
+    volumes:
+      - ./data/git:/data
+
+
+  drone: # drone server
+    image: drone/drone
+    restart: always
+    ports:
+      - "9001:80"
+    volumes:
+      - ./drone:/var/lib/drone
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_AGENTS_ENABLED=${DRONE_AGENTS_ENABLED}
+      - DRONE_GITEA_SERVER=${DRONE_GITEA_SERVER}
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+      - DRONE_SERVER_PROTO=${DRONE_SERVER_PROTO}
+      - DRONE_SERVER_HOST=${DRONE_SERVER_HOST}
+      - DRONE_GITEA_CLIENT_SECRET=${DRONE_GITEA_CLIENT_SECRET}
+      - DRONE_GITEA_CLIENT_ID=${DRONE_GITEA_CLIENT_ID}
+
+  docker-runner:
+    image: drone/drone-runner-docker:1
+    restart: always
+    depends_on: 
+      - drone
+    environment:
+      - DRONE_RPC_PROTO=${DRONE_RPC_PROTO}
+      - DRONE_RPC_HOST=${DRONE_RPC_HOST}
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+      - DRONE_RUNNER_CAPACITY=${DRONE_RUNNER_CAPACITY}
+      - DRONE_RUNNER_NAME=${DRONE_RUNNER_NAME}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
